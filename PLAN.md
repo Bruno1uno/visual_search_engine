@@ -49,31 +49,33 @@ The goal of the project is to build a production-clean **Full ML pipeline (Train
 ## Development Phases (Detailed Step by Step)
 
 ### Phase 1: Data Pipeline & Disjoint Split (`src/dataset.py`)
-- **Dataset Downloader/Parser:** Script to download and extract CUB-200-2011.
-- **Seen classes (1–100)** divided into three disjoint image subsets (not classes — classes are identical across all three):
+- [x] **Dataset Downloader/Parser:** Script to download and extract CUB-200-2011.
+- [x] **Seen classes (1–100)** divided into three disjoint image subsets:
   - `train_dataset` (~70% of images) — model training
   - `val_dataset` (~10% of images) — checkpoint selection during training (validation Recall@1 after each epoch)
-  - `seen_test_dataset` (~20% of images) — final sanity-check evaluation AFTER training (k-NN accuracy, confusion matrix). Never used for checkpoint selection — otherwise reported results would be biased by selecting checkpoints based on evaluation data.
-- **Unseen test classes (101–200)** — all images form `unseen_test_dataset`, the model never sees them during training. Main zero-shot benchmark (Recall@K, mAP, NMI).
-- **Sampler for Triplet Mining:** `MPerClassSampler` from `pytorch-metric-learning` (or custom sampler):
-  - Ensures each batch contains $P$ classes with $M$ images each (e.g., 16 classes $\times$ 4 images = batch size 64). Without this sampler, efficient online hard-negative mining cannot be performed within a batch!
-- **Data Augmentations:** Standard PyTorch transforms (Resize, RandomHorizontalFlip, ColorJitter for train; CenterCrop + Normalize for eval).
+  - `seen_test_dataset` (~20% of images) — final sanity-check evaluation AFTER training (k-NN accuracy, confusion matrix).
+- [x] **Unseen test classes (101–200)** — all images form `unseen_test_dataset` for zero-shot evaluation.
+- [x] **Sampler for Triplet Mining:** `MPerClassSampler` from `pytorch_metric_learning.samplers` ($M=4$ images per class per batch).
+- [x] **Data Augmentations:** Train transforms (Resize, RandomCrop, RandomHorizontalFlip, ColorJitter) and Eval transforms (Resize, CenterCrop).
 
 ---
 
-### Phase 2: Model, Triplet Loss & Offline Training (`src/model.py`, `src/loss.py`, `src/train.py`)
-- **Model Backbone (`src/model.py`):**
-  - ResNet34 (or ResNet18) pretrained on ImageNet (`models.ResNet34_Weights.DEFAULT`).
-  - Replace classification layer `model.fc` with a linear projection layer: `nn.Linear(in_features, 128)`.
-  - **L2 Normalization:** Apply `F.normalize(x, p=2, dim=1)` to the output 128D vector in the forward pass. The output lies on a unit sphere, guaranteeing equivalence between Cosine Similarity and L2 distance.
-- **Loss & Mining (`src/loss.py`):**
-  - **Triplet Loss:** Margin loss over triplets (Anchor, Positive, Negative).
-  - **Online Batch-Hard / Semi-Hard Mining:** Mining is entirely delegated to `pytorch_metric_learning.miners.TripletMarginMiner(type_of_triplets="hard")` — the library internally computes the $B \times B$ pairwise distance matrix and selects the hardest positive/negative pair for each anchor; none of this is implemented manually. The miner returns a list of (anchor, positive, negative) indices, which are then passed into `losses.TripletMarginLoss`.
-  - Library: `pytorch_metric_learning.losses.TripletMarginLoss` and `miners.TripletMarginMiner(type_of_triplets="hard")`.
-- **Training Loop (`src/train.py`):**
-  - Optimizer: AdamW (learning rate ~1e-4 for backbone, ~1e-3 for embedding head).
-  - Checkpointing: Saving model with lowest validation loss and highest validation Recall@1.
-  - History logging (`history.json`: train loss, val loss, validation Recall@1).
+### Phase 2: Model, Loss Functions & Offline Training (`src/model.py`, `src/loss.py`, `src/train.py`)
+- [x] **Model Backbone (`src/model.py`):**
+  - ResNet34 (or ResNet18/50) pretrained on ImageNet (`models.ResNet34_Weights.DEFAULT`).
+  - Replace classification layer `model.fc` with `nn.Identity()` and custom head: `nn.Linear(in_features, 128)`.
+  - **L2 Normalization:** Apply `F.normalize(x, p=2, dim=1)` to the output 128D vector in the forward pass.
+- [] **Loss Functions & Mining (`src/loss.py`):**
+  - [x] **Baseline:** `pytorch_metric_learning.losses.TripletMarginLoss` + `miners.TripletMarginMiner` (hard/semi-hard pair mining).
+  - [] **Proxy Variant:** `pytorch_metric_learning.losses.ProxyAnchorLoss(num_classes=100, embedding_size=128)` (proxy-based loss without miner, treating class proxies as anchors).
+- [ ] **Data Loader Parameterization (`src/dataset.py`):**
+  - Add `use_m_per_class_sampler: bool = True` to `get_cub200_dataloaders()`.
+  - `True` for Triplet Loss (`MPerClassSampler`), `False` for Proxy Anchor (`shuffle=True` random sampler).
+- [ ] **Training Loop (`src/train.py`):**
+  - Optimizer: AdamW (must include both `model.parameters()` and `loss_func.parameters()` when using Proxy Anchor).
+  - CLI flag `--loss_type` (`triplet` | `proxy_anchor`).
+  - Checkpointing: Saving distinct weights (`best_resnet34_triplet.pt` vs. `best_resnet34_proxy_anchor.pt`) based on validation Recall@1.
+  - History logging (`history_triplet.json`, `history_proxy.json`).
 
 ---
 
@@ -98,10 +100,11 @@ The goal of the project is to build a production-clean **Full ML pipeline (Train
   - **NMI (Normalized Mutual Information):** K-Means clustering on embeddings vs. actual class labels.
 - **Sanity Check on Seen Test Subset (1–100):**
   - k-NN classification accuracy and Confusion Matrix (saved as a PNG image).
-- **Ablation Study Experiment:**
-  - Comparison of metric evaluation between a model trained with **Hard Negative Mining** vs. a model trained with **Random Triplet Sampling**.
+- **Ablation Study Experiments:**
+  1. **Mining Strategy Ablation:** Hard Negative Mining vs. Random Triplet Sampling.
+  2. **Loss Function Ablation:** Triplet Loss + Hard Mining vs. Proxy Anchor Loss (comparing Recall@K, mAP, NMI on unseen classes).
 - **Embedding Space Visualization:**
-  - Computation of t-SNE / UMAP projections (pre-training vs post-training, seen vs unseen).
+  - Computation of t-SNE / UMAP projections (pre-training vs post-training, seen vs unseen, Triplet vs Proxy Anchor).
 - **Output Storage:**
   - All metrics saved to `metrics/eval_results.json` and `metrics/ablation.json`.
   - Plots saved to `plots/tsne_unseen.png`, `plots/confusion_seen.png`.
