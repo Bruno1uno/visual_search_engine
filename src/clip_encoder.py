@@ -41,45 +41,29 @@ class CLIPEncoder:
         self.tokenizer = tokenizer
 
     @torch.no_grad()
-    def encode_image(self, image: Image.Image | torch.Tensor) -> torch.Tensor:
-        """Extracts L2-normalized 512D embedding vector from a single image.
+    def encode_image(
+        self, images: Image.Image | list[Image.Image] | torch.Tensor
+    ) -> torch.Tensor:
+        """Extracts L2-normalized 512D embedding vector(s) from a single image or batch of images.
 
         Args:
-            image: PIL Image instance or preprocessed PyTorch image tensor [3, H, W].
+            images: PIL Image, list of PIL Images, or PyTorch tensor ([3, H, W] or [B, 3, H, W]).
 
         Returns:
-            L2-normalized embedding tensor of shape [1, 512].
+            L2-normalized embedding tensor of shape [1, 512] or [B, 512].
         """
-        if isinstance(image, Image.Image):
-            image_tensor = self.preprocess(image).unsqueeze(0).to(self.device)
-        elif isinstance(image, torch.Tensor):
-            if image.ndim == 3:
-                image_tensor = image.unsqueeze(0).to(self.device)
-            else:
-                image_tensor = image.to(self.device)
-        else:
-            raise TypeError(f"Unsupported image type: {type(image)}")
-
-        features = self.model.encode_image(image_tensor)
-        return F.normalize(features, p=2, dim=-1)
-
-    @torch.no_grad()
-    def encode_images_batch(self, images: list[Image.Image] | torch.Tensor) -> torch.Tensor:
-        """Extracts L2-normalized 512D embeddings from a batch of images.
-
-        Args:
-            images: List of PIL Image instances or batch tensor [B, 3, H, W].
-
-        Returns:
-            L2-normalized embeddings tensor of shape [B, 512].
-        """
-        if isinstance(images, list):
+        if isinstance(images, Image.Image):
+            batch_tensor = self.preprocess(images).unsqueeze(0).to(self.device)
+        elif isinstance(images, list):
             tensors = [self.preprocess(img) for img in images]
             batch_tensor = torch.stack(tensors).to(self.device)
         elif isinstance(images, torch.Tensor):
-            batch_tensor = images.to(self.device)
+            if images.ndim == 3:
+                batch_tensor = images.unsqueeze(0).to(self.device)
+            else:
+                batch_tensor = images.to(self.device)
         else:
-            raise TypeError(f"Unsupported images type: {type(images)}")
+            raise TypeError(f"Unsupported images input type: {type(images)}")
 
         features = self.model.encode_image(batch_tensor)
         return F.normalize(features, p=2, dim=-1)
