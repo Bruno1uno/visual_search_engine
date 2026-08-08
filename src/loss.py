@@ -15,8 +15,6 @@ def get_triplet_loss_and_miner(
 
     Returns:
         Tuple of (TripletMarginLoss, TripletMarginMiner).
-
-    Should be called only once in the code.
     """
     if type_of_triplets not in VALID_TRIPLET_TYPES:
         raise ValueError(
@@ -28,3 +26,32 @@ def get_triplet_loss_and_miner(
     miner = miners.TripletMarginMiner(margin=margin, type_of_triplets=type_of_triplets)
 
     return loss_fn, miner
+
+
+def get_proxy_anchor_loss(
+    num_classes: int = 100,
+    embedding_dim: int = 128,
+    margin: float = 0.1,
+    alpha: float = 32.0,
+) -> losses.ProxyAnchorLoss:
+    """Creates a ProxyAnchorLoss instance (Kim et al., CVPR 2020).
+
+    Unlike Triplet Loss, Proxy Anchor Loss does NOT require a miner.
+    Instead, it maintains a learnable proxy vector for each class.
+    Therefore it must be also passed into the optimizer.
+
+    Args:
+        num_classes: Number of training classes (default: 100 seen classes).
+        embedding_dim: Dimension of embeddings (default: 128).
+        margin: Soft margin parameter delta (default: 0.1).
+        alpha: Scaling factor for distance exponent (default: 32.0).
+
+    Returns:
+        losses.ProxyAnchorLoss instance.
+    """
+    return losses.ProxyAnchorLoss(
+        num_classes=num_classes,
+        embedding_size=embedding_dim,
+        margin=margin,
+        alpha=alpha,
+    )
