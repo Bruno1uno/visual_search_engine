@@ -9,6 +9,17 @@ The goal is to learn to work with embedding spaces, nearest neighbor search (Vec
 
 ## Dataset & Split (CRITICAL RULE)
 - **Dataset:** CUB-200-2011 (200 bird classes, ~11,788 images).
+  - **Raw CUB-200-2011 Directory Structure:**
+    ```text
+    data/CUB_200_2011/
+    ├── images/                               # 200 bird class subdirectories
+    │   ├── 001.Black_footed_Albatross/
+    │   └── ...
+    ├── classes.txt                           # class_id <-> class_name ("1 001.Black_footed_Albatross")
+    ├── images.txt                            # image_id <-> rel_path ("1 001.Black_footed_Albatross/...")
+    └── image_class_labels.txt                # image_id <-> class_id ("1 1")
+    ```
+  - **Metadata Parsing:** `parse_cub200_metadata()` performs a relational JOIN on `classes.txt`, `images.txt`, and `image_class_labels.txt` to produce a clean `list[dict]` of image records (`image_id`, `rel_path`, `abs_path`, `class_id`, `class_name`).
 - **Disjoint Class Split (Zero-Shot Setup):**
   - **Classes 1–100 (Seen classes):** Used for training (`train_dataset`), validation, and a small subset for `seen_test_dataset` (for k-NN & Confusion Matrix sanity check).
   - **Classes 101–200 (Unseen test classes):** The model NEVER sees these classes during training. Search and evaluation (Recall@K, mAP, NMI) on these classes demonstrate embedding space generalization.

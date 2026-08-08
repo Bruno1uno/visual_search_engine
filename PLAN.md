@@ -65,14 +65,14 @@ The goal of the project is to build a production-clean **Full ML pipeline (Train
   - ResNet34 (or ResNet18/50) pretrained on ImageNet (`models.ResNet34_Weights.DEFAULT`).
   - Replace classification layer `model.fc` with `nn.Identity()` and custom head: `nn.Linear(in_features, 128)`.
   - **L2 Normalization:** Apply `F.normalize(x, p=2, dim=1)` to the output 128D vector in the forward pass.
-- [] **Loss Functions & Mining (`src/loss.py`):**
+- [x] **Loss Functions & Mining (`src/loss.py`):**
   - [x] **Baseline:** `pytorch_metric_learning.losses.TripletMarginLoss` + `miners.TripletMarginMiner` (hard/semi-hard pair mining).
-  - [] **Proxy Variant:** `pytorch_metric_learning.losses.ProxyAnchorLoss(num_classes=100, embedding_size=128)` (proxy-based loss without miner, treating class proxies as anchors).
-- [ ] **Data Loader Parameterization (`src/dataset.py`):**
+  - [x] **Proxy Variant:** `pytorch_metric_learning.losses.ProxyAnchorLoss(num_classes=100, embedding_size=128, margin=0.1, alpha=32.0)` (proxy-based loss without miner, treating class proxies as anchors).
+- [x] **Data Loader Parameterization (`src/dataset.py`):**
   - Add `use_m_per_class_sampler: bool = True` to `get_cub200_dataloaders()`.
   - `True` for Triplet Loss (`MPerClassSampler`), `False` for Proxy Anchor (`shuffle=True` random sampler).
 - [ ] **Training Loop (`src/train.py`):**
-  - Optimizer: AdamW (must include both `model.parameters()` and `loss_func.parameters()` when using Proxy Anchor).
+  - Optimizer: AdamW (`list(model.parameters()) + list(loss_func.parameters())` when using Proxy Anchor to train learnable class proxies alongside model weights).
   - CLI flag `--loss_type` (`triplet` | `proxy_anchor`).
   - Checkpointing: Saving distinct weights (`best_resnet34_triplet.pt` vs. `best_resnet34_proxy_anchor.pt`) based on validation Recall@1.
   - History logging (`history_triplet.json`, `history_proxy.json`).
