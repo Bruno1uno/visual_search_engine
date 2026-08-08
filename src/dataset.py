@@ -39,6 +39,9 @@ class CUB200Dataset(Dataset):
 def download_and_extract_cub200(data_dir: str = "data") -> str:
     """Downloads and extracts CUB-200-2011 dataset if not already present.
 
+    Args:
+        data_dir: Local path where the dataset should be downloaded to.
+
     Returns:
         Path to extracted CUB_200_2011 directory.
     """
@@ -66,6 +69,9 @@ def download_and_extract_cub200(data_dir: str = "data") -> str:
 
 def parse_cub200_metadata(cub_dir: str) -> list[dict]:
     """Parses CUB-200-2011 metadata files into a list of image records.
+
+    Args:
+        cub_dir: Path to the extracted CUB_200_2011 directory.
 
     Returns:
         List of dicts with keys: 'image_id', 'rel_path', 'abs_path', 'class_id', 'class_name'.
@@ -163,6 +169,10 @@ def create_disjoint_splits(records: list[dict], seed: int = 42) -> tuple[list[di
     - Unseen classes (101..200): All assigned to unseen_test.
 
     This is the standard split for the CUB-200-2011 dataset for zero-shot learning.
+
+    Args:
+        records: List of dicts with keys: 'image_id', 'rel_path', 'abs_path', 'class_id', 'class_name'.
+        seed: Random seed for reproducibility.
 
     Returns:
         (train_records, val_records, seen_test_records, unseen_test_records)
