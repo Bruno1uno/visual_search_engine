@@ -86,3 +86,7 @@ class CLIPEncoder:
         tokens = self.tokenizer(text_list).to(self.device)
         features = self.model.encode_text(tokens)
         return F.normalize(features, p=2, dim=-1)
+
+    # Alias for backward compatibility
+    encode_images_batch = encode_image
+

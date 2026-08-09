@@ -27,3 +27,4 @@ frontend/dist/
 .idea/
 
 .env
+*.db

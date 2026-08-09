@@ -56,7 +56,9 @@ def download_and_extract_cub200(data_dir: str = "data") -> str:
 
     if not os.path.exists(tgz_path):
         print(f"Downloading CUB-200-2011 dataset from {CUB_URL}...")
-        urllib.request.urlretrieve(CUB_URL, tgz_path)
+        req = urllib.request.Request(CUB_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req) as response, open(tgz_path, "wb") as out_file:
+            out_file.write(response.read())
         print("Download complete.")
 
     print(f"Extracting {tgz_path}...")

@@ -36,7 +36,7 @@ def test_clip_batch_image_encoding(clip_encoder):
         Image.new("RGB", (224, 224), color=(255, 0, 0)),
         Image.new("RGB", (224, 224), color=(0, 255, 0)),
     ]
-    vecs = clip_encoder.encode_images_batch(images)
+    vecs = clip_encoder.encode_image(images)
 
     assert vecs.shape == (2, 512)
     norms = torch.norm(vecs, p=2, dim=-1)
