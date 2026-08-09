@@ -71,11 +71,14 @@ The goal of the project is to build a production-clean **Full ML pipeline (Train
 - [x] **Data Loader Parameterization (`src/dataset.py`):**
   - Add `use_m_per_class_sampler: bool = True` to `get_cub200_dataloaders()`.
   - `True` for Triplet Loss (`MPerClassSampler`), `False` for Proxy Anchor (`shuffle=True` random sampler).
-- [ ] **Training Loop (`src/train.py`):**
-  - Optimizer: AdamW (`list(model.parameters()) + list(loss_func.parameters())` when using Proxy Anchor to train learnable class proxies alongside model weights).
+- [x] **Training Loop (`src/train.py`):**
+  - Optimizer: AdamW (`list(model.parameters()) + list(loss_func.parameters())` when using Proxy Anchor).
   - CLI flag `--loss_type` (`triplet` | `proxy_anchor`).
-  - Checkpointing: Saving distinct weights (`best_resnet34_triplet.pt` vs. `best_resnet34_proxy_anchor.pt`) based on validation Recall@1.
-  - History logging (`history_triplet.json`, `history_proxy.json`).
+  - Checkpointing: Saving distinct weights (`best_resnet34_proxy_anchor.pt`) based on validation Recall@1.
+  - History logging (`history_proxy_anchor.json`).
+- [x] **Hyperparameter Optimization (`src/hpo.py`):**
+  - Optuna study with SQLite storage (`hpo_study.db`) and `MedianPruner` for trial pruning.
+  - Export best hyperparameters to YAML (`configs/best_config_proxy_anchor.yaml`) and summary JSON (`metrics/hpo_summary_proxy_anchor.json`).
 
 ---
 

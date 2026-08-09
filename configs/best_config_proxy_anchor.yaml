@@ -1,0 +1,8 @@
+hyperparameters:
+  alpha: 32.43261735774883
+  backbone_name: resnet34
+  batch_size: 32
+  embedding_dim: 256
+  lr: 5.6858962114272295e-05
+  margin: 0.2669066230968625
+loss_type: proxy_anchor
