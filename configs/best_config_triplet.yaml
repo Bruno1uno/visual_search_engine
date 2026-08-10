@@ -1,0 +1,7 @@
+hyperparameters:
+  backbone_name: resnet34
+  batch_size: 64
+  embedding_dim: 256
+  lr: 7.087708617105664e-05
+  margin: 0.2032474118935696
+loss_type: triplet
