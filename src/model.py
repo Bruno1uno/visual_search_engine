@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -60,3 +61,63 @@ class EmbeddingNet(nn.Module):
         """Unfreeze backbone parameters for end-to-end fine-tuning."""
         for param in self.backbone.parameters():
             param.requires_grad = True
+
+    @classmethod
+    def from_checkpoint(
+        cls,
+        checkpoint_path: str,
+        device: torch.device | str = "cpu",
+        default_backbone: str = "resnet34",
+        default_dim: int = 128,
+    ) -> "EmbeddingNet":
+        """Factory method to load EmbeddingNet from checkpoint file."""
+        return load_resnet_model(checkpoint_path, device, default_backbone, default_dim)
+
+
+def load_resnet_model(
+    checkpoint_path: str,
+    device: torch.device | str = "cpu",
+    default_backbone: str = "resnet34",
+    default_dim: int = 128,
+) -> EmbeddingNet:
+    """Instantiates EmbeddingNet model and loads fine-tuned weights from a checkpoint file.
+
+    Infers embedding_dim and backbone parameters from saved state_dict.
+
+    Args:
+        checkpoint_path: Filepath to PyTorch checkpoint (.pt).
+        device: Computation device (CPU or CUDA).
+        default_backbone: Fallback ResNet backbone if not specified in checkpoint.
+        default_dim: Fallback embedding dimension if not specified in checkpoint.
+
+    Returns:
+        Evaluated EmbeddingNet model loaded on target device.
+    """
+    comp_device = torch.device(device)
+    if os.path.exists(checkpoint_path):
+        checkpoint = torch.load(checkpoint_path, map_location=comp_device, weights_only=False)
+        embedding_dim = default_dim
+        backbone_name = default_backbone
+        state_dict = None
+
+        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+            state_dict = checkpoint["model_state_dict"]
+            embedding_dim = checkpoint.get("embedding_dim", state_dict["embedding_head.weight"].shape[0])
+            backbone_name = checkpoint.get("backbone_name", default_backbone)
+        elif isinstance(checkpoint, dict):
+            state_dict = checkpoint
+            if "embedding_head.weight" in state_dict:
+                embedding_dim = state_dict["embedding_head.weight"].shape[0]
+
+        model = EmbeddingNet(embedding_dim=embedding_dim, backbone_name=backbone_name)
+        if state_dict is not None:
+            model.load_state_dict(state_dict)
+        print(f"Loaded ResNet checkpoint from '{checkpoint_path}' (embedding_dim={embedding_dim})")
+    else:
+        model = EmbeddingNet(embedding_dim=default_dim, backbone_name=default_backbone)
+        print(f"Warning: Checkpoint '{checkpoint_path}' not found. Using default pretrained backbone weights.")
+
+    model.to(comp_device)
+    model.eval()
+    return model
+
