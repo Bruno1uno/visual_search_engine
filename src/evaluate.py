@@ -138,7 +138,7 @@ def compute_nmi(
     return float(normalized_mutual_info_score(labels_np, cluster_labels))
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def validate(
     model: nn.Module,
     dataloader: DataLoader,
@@ -194,7 +194,7 @@ def validate(
     return recalls, avg_val_loss
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def extract_embeddings_and_labels(
     model: nn.Module,
     dataloader: DataLoader,

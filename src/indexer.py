@@ -54,7 +54,7 @@ def build_indices(
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
     resnet_embeddings_list = []
-    with torch.no_grad():
+    with torch.inference_mode():
         for images, _, _ in tqdm(dataloader, desc="Extracting ResNet (128D) embeddings"):
             images = images.to(comp_device)
             embeds = resnet_model(images)

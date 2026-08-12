@@ -40,7 +40,7 @@ class CLIPEncoder:
         self.preprocess = preprocess
         self.tokenizer = tokenizer
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def encode_image(
         self, images: Image.Image | list[Image.Image] | torch.Tensor
     ) -> torch.Tensor:
@@ -68,7 +68,7 @@ class CLIPEncoder:
         features = self.model.encode_image(batch_tensor)
         return F.normalize(features, p=2, dim=-1)
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def encode_text(self, text: str | list[str]) -> torch.Tensor:
         """Extracts L2-normalized 512D embedding vector from text query.
 
