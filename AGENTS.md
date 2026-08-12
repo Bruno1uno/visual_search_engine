@@ -1,7 +1,7 @@
 # Metric Learning & Multi-Modal Retrieval – Project Context
 
 ## Project Goal
-Portfolio ML engineering project demonstrating a full pipeline: **Metric learning encoder training → Offline evaluation on unseen classes → FAISS indexing → FastAPI serving → React frontend + Streamlit dashboard**.
+Portfolio ML engineering project demonstrating a full pipeline: **Metric learning encoder training -> Offline evaluation on unseen classes -> FAISS indexing -> FastAPI serving -> React frontend + Streamlit dashboard**.
 
 The goal is to learn to work with embedding spaces, nearest neighbor search (Vector Search), and multi-modal retrieval (Text-to-Image via CLIP).
 
@@ -80,7 +80,7 @@ Tests are written continuously alongside implementation, not at the end. Mirrori
 | :--- | :--- | :--- |
 | `test_dataset.py` | No class overlap between seen (1–100)/unseen (101–200); no file overlap between train/val/seen_test | Error here = entire Phase 3 evaluation generates nonsensical numbers without being obvious at first glance |
 | `test_sampler.py` | `MPerClassSampler` actually returns P classes × M instances per batch, not a random distribution | Without this test, hard-mining silently "turns off" (missing positive pairs) and no one notices |
-| `test_model.py` | Output embedding has an L2 norm of exactly 1.0 | Normalization sanity check — if it fails, cosine similarity in FAISS stops matching reality |
+| `test_model.py` | Output embedding has an L2 norm of exactly 1.0 | Normalization sanity check - if it fails, cosine similarity in FAISS stops matching reality |
 | `test_train.py` | Smoke test: single training step executes without error, loss is a finite number (not NaN/inf) | Cheap test, catches broken gradient flow right at the start |
 | `test_indexer.py` | Number of vectors in FAISS index == number of items in `id_to_metadata.json` | Most common real-world error: desynchronized index and mapping after rebuild |
 | `test_inference.py` | `search_by_image`/`search_by_text` returns top_k results in the correct format, correctly distinguishes `engine_type` | Verifies the core stable API that all serving relies on |
@@ -89,6 +89,8 @@ Tests are written continuously alongside implementation, not at the end. Mirrori
 ---
 
 ## How to Help Me (Communication and Coding Rules)
+- **ASCII Character Rule (CRITICAL):** Do NOT use non-standard unicode characters, em-dashes (e.g. `—`), or fancy unicode arrows (e.g. `→`). Use standard keyboard ASCII characters only: standard hyphen `-`, ASCII arrow `->`, standard ASCII dots `...`, standard single quote `'`.
 - If you write a code snippet, always **explain why** it is written that way (e.g., *why L2 normalization is necessary at the end of the forward pass*).
 - **Do not affirm unnecessarily, do not compliment.** If I suggest an architecturally bad or unnecessarily complicated approach, state it directly and explain the risks.
 - **Guard the scope:** If I start inventing complex extensions (relevance feedback, re-ranking), remind me that it distracts from completing the core pipeline.
+
