@@ -1,6 +1,7 @@
 import os
 import argparse
 import json
+from pathlib import Path
 import yaml
 import torch
 import torch.nn as nn
@@ -84,9 +85,10 @@ def train_model(
     Returns:
         Dict history containing train_loss, val_recall1, best_epoch.
     """
-    os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
-    os.makedirs("metrics", exist_ok=True)
-    os.makedirs("plots", exist_ok=True)
+    ckpt_path = Path(checkpoint_path)
+    ckpt_path.parent.mkdir(parents=True, exist_ok=True)
+    Path("metrics").mkdir(parents=True, exist_ok=True)
+    Path("plots").mkdir(parents=True, exist_ok=True)
 
     history = {"train_loss": [], "val_loss": [], "val_recall1": [], "best_epoch": 0}
     best_val_recall1 = -1.0
@@ -147,8 +149,8 @@ def train_model(
             if hasattr(loss_fn, "state_dict") and loss_type == "proxy_anchor":
                 checkpoint_payload["loss_state_dict"] = loss_fn.state_dict()
 
-            torch.save(checkpoint_payload, checkpoint_path)
-            print(f"  Saved checkpoint to {checkpoint_path} (Best Val Recall@1: {best_val_recall1:.2%})")
+            torch.save(checkpoint_payload, ckpt_path)
+            print(f"  Saved checkpoint to {ckpt_path} (Best Val Recall@1: {best_val_recall1:.2%})")
         else:
             epochs_without_improvement += 1
             print(f"  No improvement in Val Recall@1 ({epochs_without_improvement}/{patience})")
@@ -159,8 +161,8 @@ def train_model(
             break
 
     # Save training history JSON
-    history_filename = f"history_{loss_type}.json"
-    with open(os.path.join("metrics", history_filename), "w") as f:
+    history_file = Path("metrics") / f"history_{loss_type}.json"
+    with open(history_file, "w") as f:
         json.dump(history, f, indent=2)
 
     # Plot training history curves
@@ -172,8 +174,8 @@ def train_model(
         print(f"Warning: Could not plot training history: {e}")
 
     # Restore best checkpoint
-    if os.path.exists(checkpoint_path):
-        ckpt = torch.load(checkpoint_path, map_location=device, weights_only=True)
+    if ckpt_path.exists():
+        ckpt = torch.load(ckpt_path, map_location=device, weights_only=True)
         model.load_state_dict(ckpt["model_state_dict"])
         print(f"\nTraining complete. Best checkpoint restored from epoch {history['best_epoch']} with Val Recall@1: {best_val_recall1:.2%}")
 
@@ -315,7 +317,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # If YAML config is provided (e.g. from HPO study), load parameters from it
-    if args.config_path and os.path.exists(args.config_path):
+    if args.config_path and Path(args.config_path).exists():
         print(f"Loading hyperparameter configuration from {args.config_path}...")
         with open(args.config_path, "r") as f:
             yaml_cfg = yaml.safe_load(f)

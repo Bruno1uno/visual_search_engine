@@ -1,6 +1,7 @@
 import os
 import tarfile
 import urllib.request
+from pathlib import Path
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
@@ -36,25 +37,26 @@ class CUB200Dataset(Dataset):
         return image, target, rec["abs_path"]
 
 
-def download_and_extract_cub200(data_dir: str = "data") -> str:
+def download_and_extract_cub200(data_dir: str | Path = "data") -> str:
     """Downloads and extracts CUB-200-2011 dataset if not already present.
 
     Args:
         data_dir: Local path where the dataset should be downloaded to.
 
     Returns:
-        Path to extracted CUB_200_2011 directory.
+        Path to extracted CUB_200_2011 directory as string.
     """
-    cub_dir = os.path.join(data_dir, "CUB_200_2011")
-    images_dir = os.path.join(cub_dir, "images")
+    data_path = Path(data_dir)
+    cub_dir = data_path / "CUB_200_2011"
+    images_dir = cub_dir / "images"
 
-    if os.path.exists(images_dir):
-        return cub_dir
+    if images_dir.exists():
+        return str(cub_dir)
 
-    os.makedirs(data_dir, exist_ok=True)
-    tgz_path = os.path.join(data_dir, "CUB_200_2011.tgz")
+    data_path.mkdir(parents=True, exist_ok=True)
+    tgz_path = data_path / "CUB_200_2011.tgz"
 
-    if not os.path.exists(tgz_path):
+    if not tgz_path.exists():
         print(f"Downloading CUB-200-2011 dataset from {CUB_URL}...")
         req = urllib.request.Request(CUB_URL, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req) as response, open(tgz_path, "wb") as out_file:
@@ -63,13 +65,13 @@ def download_and_extract_cub200(data_dir: str = "data") -> str:
 
     print(f"Extracting {tgz_path}...")
     with tarfile.open(tgz_path, "r:gz") as tar:
-        tar.extractall(path=data_dir)
+        tar.extractall(path=data_path)
     print("Extraction complete.")
 
-    return cub_dir
+    return str(cub_dir)
 
 
-def parse_cub200_metadata(cub_dir: str) -> list[dict]:
+def parse_cub200_metadata(cub_dir: str | Path) -> list[dict]:
     """Parses CUB-200-2011 metadata files into a list of image records.
 
     Args:
@@ -78,17 +80,17 @@ def parse_cub200_metadata(cub_dir: str) -> list[dict]:
     Returns:
         List of dicts with keys: 'image_id', 'rel_path', 'abs_path', 'class_id', 'class_name'.
     """
-    images_file = os.path.join(cub_dir, "images.txt")
-    labels_file = os.path.join(cub_dir, "image_class_labels.txt")
-    classes_file = os.path.join(cub_dir, "classes.txt")
+    cub_path = Path(cub_dir)
+    images_file = cub_path / "images.txt"
+    labels_file = cub_path / "image_class_labels.txt"
+    classes_file = cub_path / "classes.txt"
 
-    if not (os.path.exists(images_file) and os.path.exists(labels_file)):
-        raise FileNotFoundError(f"Missing metadata files in {cub_dir}")
+    if not (images_file.exists() and labels_file.exists()):
+        raise FileNotFoundError(f"Missing metadata files in {cub_path}")
 
     # Load classes: class_id -> class_name
-    # Example structure: {1: 'black_throated_sparrow', 2: 'california_towhee', ...}
     class_names = {}
-    if os.path.exists(classes_file):
+    if classes_file.exists():
         with open(classes_file, "r") as f:
             for line in f:
                 parts = line.strip().split()
@@ -96,7 +98,6 @@ def parse_cub200_metadata(cub_dir: str) -> list[dict]:
                     class_names[int(parts[0])] = parts[1]
 
     # Load image paths: image_id -> rel_path
-    # Example structure: {1: '001.Black_footed_Albatross/ABal_0001_45.jpg', 2: '002.Anna_hummingbird/ABHum_0001_78.jpg', ...}
     images = {}
     with open(images_file, "r") as f:
         for line in f:
@@ -105,7 +106,6 @@ def parse_cub200_metadata(cub_dir: str) -> list[dict]:
                 images[int(parts[0])] = parts[1]
 
     # Load image labels: image_id -> class_id
-    # Example structure: {1: 285, 2: 325, 3: 285, ...}
     records = []
     with open(labels_file, "r") as f:
         for line in f:
@@ -114,7 +114,7 @@ def parse_cub200_metadata(cub_dir: str) -> list[dict]:
                 img_id = int(parts[0])
                 cls_id = int(parts[1])
                 rel_path = images[img_id]
-                abs_path = os.path.join(cub_dir, "images", rel_path)
+                abs_path = str(cub_path / "images" / rel_path)
                 records.append({
                     "image_id": img_id,
                     "rel_path": rel_path,

@@ -1,6 +1,7 @@
 import os
 import json
 import argparse
+from pathlib import Path
 import numpy as np
 import faiss
 import torch
@@ -87,13 +88,14 @@ def build_indices(
     clip_index.add(clip_vectors)
 
     # Save indices and metadata JSON to output directory
-    os.makedirs(output_dir, exist_ok=True)
-    resnet_index_path = os.path.join(output_dir, "resnet_cub200.faiss")
-    clip_index_path = os.path.join(output_dir, "clip_cub200.faiss")
-    metadata_path = os.path.join(output_dir, "id_to_metadata.json")
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    resnet_index_path = output_path / "resnet_cub200.faiss"
+    clip_index_path = output_path / "clip_cub200.faiss"
+    metadata_path = output_path / "id_to_metadata.json"
 
-    faiss.write_index(resnet_index, resnet_index_path)
-    faiss.write_index(clip_index, clip_index_path)
+    faiss.write_index(resnet_index, str(resnet_index_path))
+    faiss.write_index(clip_index, str(clip_index_path))
 
     id_to_metadata = {}
     for i, rec in enumerate(records):
@@ -113,7 +115,7 @@ def build_indices(
     print(f"  - CLIP Index (512D, {clip_index.ntotal} vectors): {clip_index_path}")
     print(f"  - Metadata mapping ({len(id_to_metadata)} entries): {metadata_path}")
 
-    return resnet_index_path, clip_index_path, metadata_path
+    return str(resnet_index_path), str(clip_index_path), str(metadata_path)
 
 
 if __name__ == "__main__":

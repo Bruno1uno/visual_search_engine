@@ -1,6 +1,7 @@
 import os
 import json
 import argparse
+from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
@@ -424,7 +425,7 @@ def run_evaluation(
     print(f"  NMI:      {unseen_results['NMI']:.4f}")
 
     # Save combined evaluation report JSON
-    os.makedirs(os.path.dirname(metrics_path), exist_ok=True)
+    Path(metrics_path).parent.mkdir(parents=True, exist_ok=True)
 
     eval_report = {
         "loss_name": loss_name,

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")  # Non-interactive backend for headless / script execution
 import matplotlib.pyplot as plt
@@ -22,7 +23,8 @@ def plot_training_history(
     Returns:
         Absolute filepath to the saved figure PNG.
     """
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    path_obj = Path(save_path)
+    path_obj.parent.mkdir(parents=True, exist_ok=True)
 
     epochs = range(1, len(history.get("train_loss", [])) + 1)
     train_loss = history.get("train_loss", [])
@@ -58,11 +60,11 @@ def plot_training_history(
     ax2.legend()
 
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.savefig(path_obj, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
-    print(f"Saved training history plot to {save_path}")
-    return os.path.abspath(save_path)
+    print(f"Saved training history plot to {path_obj}")
+    return str(path_obj.resolve())
 
 
 def plot_confusion_matrix(
@@ -82,7 +84,8 @@ def plot_confusion_matrix(
     Returns:
         Absolute filepath to the saved figure PNG.
     """
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    path_obj = Path(save_path)
+    path_obj.parent.mkdir(parents=True, exist_ok=True)
 
     fig, ax = plt.subplots(figsize=(10, 8))
     sns.heatmap(
@@ -100,11 +103,11 @@ def plot_confusion_matrix(
     ax.set_ylabel("True Class")
 
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.savefig(path_obj, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
-    print(f"Saved confusion matrix plot to {save_path}")
-    return os.path.abspath(save_path)
+    print(f"Saved confusion matrix plot to {path_obj}")
+    return str(path_obj.resolve())
 
 
 def plot_tsne(
@@ -128,7 +131,8 @@ def plot_tsne(
     Returns:
         Absolute filepath to the saved figure PNG.
     """
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    path_obj = Path(save_path)
+    path_obj.parent.mkdir(parents=True, exist_ok=True)
 
     # Filter to top max_classes for clean visual scatter
     unique_labels = np.unique(labels)
@@ -158,8 +162,8 @@ def plot_tsne(
     ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=8)
 
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.savefig(path_obj, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
-    print(f"Saved t-SNE plot to {save_path}")
-    return os.path.abspath(save_path)
+    print(f"Saved t-SNE plot to {path_obj}")
+    return str(path_obj.resolve())

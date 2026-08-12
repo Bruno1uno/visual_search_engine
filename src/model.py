@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -75,7 +76,7 @@ class EmbeddingNet(nn.Module):
 
 
 def load_resnet_model(
-    checkpoint_path: str,
+    checkpoint_path: str | Path,
     device: torch.device | str = "cpu",
     default_backbone: str = "resnet34",
     default_dim: int = 128,
@@ -94,8 +95,9 @@ def load_resnet_model(
         Evaluated EmbeddingNet model loaded on target device.
     """
     comp_device = torch.device(device)
-    if os.path.exists(checkpoint_path):
-        checkpoint = torch.load(checkpoint_path, map_location=comp_device, weights_only=False)
+    path_obj = Path(checkpoint_path)
+    if path_obj.exists():
+        checkpoint = torch.load(path_obj, map_location=comp_device, weights_only=False)
         embedding_dim = default_dim
         backbone_name = default_backbone
         state_dict = None

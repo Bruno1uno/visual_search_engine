@@ -1,6 +1,7 @@
 import os
 import argparse
 import json
+from pathlib import Path
 import yaml
 import optuna
 import torch
@@ -175,15 +176,17 @@ def run_hpo(
     print(f"Best Hyperparameters: {best_params}")
 
     # Save best config to YAML
-    os.makedirs(config_dir, exist_ok=True)
-    config_path = os.path.join(config_dir, f"best_config_{loss_type}.yaml")
+    config_dir_path = Path(config_dir)
+    config_dir_path.mkdir(parents=True, exist_ok=True)
+    config_path = config_dir_path / f"best_config_{loss_type}.yaml"
     with open(config_path, "w") as f:
         yaml.dump({"loss_type": loss_type, "hyperparameters": best_params}, f, indent=2)
     print(f"Saved best YAML config to {config_path}")
 
     # Save study summary to JSON
-    os.makedirs("metrics", exist_ok=True)
-    summary_path = os.path.join("metrics", f"hpo_summary_{loss_type}.json")
+    metrics_path = Path("metrics")
+    metrics_path.mkdir(parents=True, exist_ok=True)
+    summary_path = metrics_path / f"hpo_summary_{loss_type}.json"
     summary_data = {
         "study_name": study_name,
         "best_val_recall1": best_trial.value,
