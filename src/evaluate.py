@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import argparse
 from pathlib import Path
@@ -225,7 +226,10 @@ def extract_embeddings_and_labels(
         all_labels.append(labels.cpu())
 
     embeddings_matrix = torch.cat(all_embeddings, dim=0)
-    labels_tensor = torch.cat(all_labels, dim=0)
+    if hasattr(dataloader.dataset, "records"):
+        labels_tensor = torch.tensor([r["class_id"] for r in dataloader.dataset.records], dtype=torch.long)
+    else:
+        labels_tensor = torch.cat(all_labels, dim=0)
 
     return embeddings_matrix, labels_tensor
 
@@ -233,6 +237,7 @@ def extract_embeddings_and_labels(
 def evaluate_seen_test_split(
     embeddings_matrix: torch.Tensor,
     labels_tensor: torch.Tensor,
+    class_names: dict[int, str] | None = None,
     save_plot_path: str = "plots/confusion_seen.png",
     save_tsne_path: str | None = "plots/tsne_seen.png",
     loss_name: str = "proxy_anchor",
@@ -248,6 +253,7 @@ def evaluate_seen_test_split(
     Args:
         embeddings_matrix: L2-normalized embeddings tensor [N, D].
         labels_tensor: 1D class labels tensor [N].
+        class_names: Optional mapping from class ID to class name.
         save_plot_path: Filepath to save confusion matrix heatmap.
         save_tsne_path: Optional filepath to save t-SNE scatter plot for seen classes.
         loss_name: Identifier of loss function used (e.g. 'proxy_anchor' or 'triplet').
@@ -286,6 +292,7 @@ def evaluate_seen_test_split(
         plot_tsne(
             embeddings=embeds_np,
             labels=labels_np,
+            class_names=class_names,
             save_path=save_tsne_path,
             title=f"t-SNE Projection on Seen Test Classes (1-100) [{loss_name}]",
             max_classes=15,
@@ -297,6 +304,7 @@ def evaluate_seen_test_split(
 def evaluate_unseen_test_split(
     embeddings_matrix: torch.Tensor,
     labels_tensor: torch.Tensor,
+    class_names: dict[int, str] | None = None,
     save_plot_path: str = "plots/tsne_unseen.png",
     k_values: tuple[int, ...] = (1, 2, 4, 8),
     loss_name: str = "proxy_anchor",
@@ -308,6 +316,7 @@ def evaluate_unseen_test_split(
     Args:
         embeddings_matrix: L2-normalized embeddings tensor [N, D].
         labels_tensor: 1D class labels tensor [N].
+        class_names: Optional mapping from class ID to class name.
         save_plot_path: Filepath to save t-SNE plot.
         k_values: Tuple of K values for Recall@K evaluation.
         loss_name: Identifier of loss function used (e.g. 'proxy_anchor' or 'triplet').
@@ -335,6 +344,7 @@ def evaluate_unseen_test_split(
     plot_tsne(
         embeddings=embeds_np,
         labels=labels_np,
+        class_names=class_names,
         save_path=save_plot_path,
         title=f"t-SNE Projection on Unseen Test Classes (101-200) [{loss_name}]",
         max_classes=15,
@@ -398,12 +408,16 @@ def run_evaluation(
         use_m_per_class_sampler=False,
     )
 
+    seen_class_names = {r["class_id"]: r["class_name"] for r in seen_test_loader.dataset.records}
+    unseen_class_names = {r["class_id"]: r["class_name"] for r in unseen_test_loader.dataset.records}
+
     # Evaluate Seen Test Split (1-100)
     print(f"\n--- Evaluating Seen Test Split (Classes 1-100) [{loss_name}] ---")
     seen_embeds, seen_labels = extract_embeddings_and_labels(model, seen_test_loader, comp_device)
     seen_results = evaluate_seen_test_split(
         seen_embeds,
         seen_labels,
+        class_names=seen_class_names,
         save_plot_path=confusion_path,
         save_tsne_path=tsne_seen_path,
         loss_name=loss_name,
@@ -414,7 +428,11 @@ def run_evaluation(
     print(f"\n--- Evaluating Unseen Test Split (Classes 101-200) [{loss_name}] ---")
     unseen_embeds, unseen_labels = extract_embeddings_and_labels(model, unseen_test_loader, comp_device)
     unseen_results = evaluate_unseen_test_split(
-        unseen_embeds, unseen_labels, save_plot_path=tsne_path, loss_name=loss_name
+        unseen_embeds,
+        unseen_labels,
+        class_names=unseen_class_names,
+        save_plot_path=tsne_path,
+        loss_name=loss_name,
     )
 
     print(f"  Recall@1: {unseen_results['recall_at_1']:.2%}")

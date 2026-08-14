@@ -113,20 +113,22 @@ def plot_confusion_matrix(
 def plot_tsne(
     embeddings: np.ndarray,
     labels: np.ndarray,
-    class_names: list[str] | None = None,
+    class_names: dict[int, str] | list[str] | None = None,
     save_path: str = "plots/tsne_unseen.png",
     title: str = "t-SNE Embedding Space Projection (Unseen Classes)",
     max_classes: int = 15,
+    seed: int = 42,
 ) -> str:
     """Computes t-SNE 2D projection of embeddings and saves scatter plot.
 
     Args:
         embeddings: 2D numpy array of embeddings [N, D].
         labels: 1D numpy array of class labels [N].
-        class_names: Optional mapping from label ID to class name.
+        class_names: Optional mapping from class ID to class name.
         save_path: Output PNG filepath.
         title: Plot title.
         max_classes: Max number of classes to visualize for clarity.
+        seed: Random seed for reproducible class selection.
 
     Returns:
         Absolute filepath to the saved figure PNG.
@@ -134,16 +136,17 @@ def plot_tsne(
     path_obj = Path(save_path)
     path_obj.parent.mkdir(parents=True, exist_ok=True)
 
-    # Filter to top max_classes for clean visual scatter
+    # Randomly select max_classes diverse classes with fixed seed for clean visual scatter
     unique_labels = np.unique(labels)
     if len(unique_labels) > max_classes:
-        selected_labels = unique_labels[:max_classes]
+        rng = np.random.RandomState(seed)
+        selected_labels = np.sort(rng.choice(unique_labels, size=max_classes, replace=False))
         mask = np.isin(labels, selected_labels)
         embeddings = embeddings[mask]
         labels = labels[mask]
 
     # Compute 2D t-SNE
-    tsne = TSNE(n_components=2, random_state=42, perplexity=min(30, len(embeddings) - 1))
+    tsne = TSNE(n_components=2, random_state=42, perplexity=min(30, max(5, len(embeddings) // 10)))
     embeddings_2d = tsne.fit_transform(embeddings)
 
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -152,7 +155,17 @@ def plot_tsne(
 
     for lbl, color in zip(unique_selected, colors):
         pts = embeddings_2d[labels == lbl]
-        label_name = class_names[lbl] if class_names and lbl < len(class_names) else f"Class {lbl}"
+        lbl_int = int(lbl)
+        if class_names is not None:
+            if isinstance(class_names, dict):
+                label_name = class_names.get(lbl_int, f"Class {lbl_int}")
+            elif isinstance(class_names, list) and 0 <= lbl_int < len(class_names):
+                label_name = class_names[lbl_int]
+            else:
+                label_name = f"Class {lbl_int}"
+        else:
+            label_name = f"Class {lbl_int}"
+
         ax.scatter(pts[:, 0], pts[:, 1], color=color, label=label_name, alpha=0.7, edgecolors="none", s=30)
 
     ax.set_title(title, fontsize=14, fontweight="bold")
