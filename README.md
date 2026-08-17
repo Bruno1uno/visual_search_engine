@@ -173,11 +173,26 @@ npm run dev
 
 ---
 
-### 8. Automated Test Suite (`pytest`)
+### 8. Full-Stack Docker Deployment (`Dockerfile`)
+Build and run the entire unified full-stack application (FastAPI backend + React frontend) in a single isolated Docker container:
+```powershell
+# Build multi-stage Docker image
+docker build -t visual-search-engine .
+
+# Run container on port 7860 (Hugging Face Spaces default)
+docker run -p 7860:7860 visual-search-engine
+```
+- Web Application & API: `http://localhost:7860`
+- Swagger UI Documentation: `http://localhost:7860/docs`
+
+---
+
+### 9. Automated Test Suite (`pytest`)
 Run unit and integration tests across the codebase:
 ```powershell
 # Run fast unit test suite (excludes slow integration tests)
 pytest -m "not slow"
+
 
 # Run full test suite including end-to-end dataset integration test
 pytest
