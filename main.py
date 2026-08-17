@@ -22,8 +22,14 @@ DATA_IMAGES_DIR = "data/CUB_200_2011/images"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI application lifecycle.
-    Loads VisualSearchEngine into app.state at server startup.
+    Ensures CUB-200 dataset images are downloaded and loads VisualSearchEngine.
     """
+    try:
+        from src.dataset import download_and_extract_cub200
+        download_and_extract_cub200("data")
+    except Exception as err:
+        print(f"Warning: Dataset download check failed: {err}")
+
     try:
         app.state.search_engine = VisualSearchEngine(
             resnet_checkpoint_path=CHECKPOINT_PATH,
@@ -58,10 +64,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files to serve raw CUB-200 images to the web client
+# Ensure images directory exists and mount static files to serve raw CUB-200 images to the web client
 images_path = Path(DATA_IMAGES_DIR)
-if images_path.exists():
-    app.mount("/static/images", StaticFiles(directory=str(images_path)), name="images")
+images_path.mkdir(parents=True, exist_ok=True)
+app.mount("/static/images", StaticFiles(directory=str(images_path)), name="images")
+
 
 
 # Pydantic Response / Request Models

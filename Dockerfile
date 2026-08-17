@@ -30,6 +30,8 @@ COPY checkpoints/ ./checkpoints/
 COPY indices/ ./indices/
 COPY metrics/ ./metrics/
 RUN mkdir -p data
+RUN python -c "from src.dataset import download_and_extract_cub200; download_and_extract_cub200('data')"
+
 
 
 # Copy compiled React frontend from Stage 1 into frontend/dist
