@@ -6,8 +6,14 @@ import requests
 import streamlit as st
 from PIL import Image
 
-# Global Configuration
-API_BASE_URL = "http://127.0.0.1:8000"
+import os
+
+# Global Configuration:
+# - Production (Hugging Face Space): defaults to live API URL "https://bglez-visual-search-app.hf.space"
+# - Local Development: set API_BASE_URL to "http://127.0.0.1:8000" (or set environment variable API_BASE_URL=http://127.0.0.1:8000)
+API_BASE_URL = os.getenv("API_BASE_URL", "https://bglez-visual-search-app.hf.space")
+
+
 
 st.set_page_config(
     page_title="Visual Search Engine - ML Dashboard",
@@ -326,7 +332,7 @@ elif page == "Interactive Search Playground":
                                         if abs_path.exists():
                                             st.image(str(abs_path), width="stretch")
                                         else:
-                                            st.caption(f"[Image file not found: {res['rel_path']}]")
+                                            st.image(f"{API_BASE_URL}/static/images/{res['rel_path']}", width="stretch")
                                         st.markdown(f"**{res['class_name']}**")
                                         st.caption(f"Score: `{res['score']:.4f}` | Class ID: {res['class_id']}")
                     else:
@@ -373,7 +379,8 @@ elif page == "Interactive Search Playground":
                                         if abs_path.exists():
                                             st.image(str(abs_path), width="stretch")
                                         else:
-                                            st.caption(f"[Image file not found: {res['rel_path']}]")
+                                            st.image(f"{API_BASE_URL}/static/images/{res['rel_path']}", width="stretch")
+
                                         st.markdown(f"**{res['class_name']}**")
                                         st.caption(f"Cosine Similarity: `{res['score']:.4f}`")
                     else:
