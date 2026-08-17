@@ -80,6 +80,10 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
+> [!NOTE]
+> **Automatic Dataset Management:** The CUB-200-2011 dataset does not need to be downloaded or extracted manually. All pipeline CLI scripts (`src/train.py`, `src/hpo.py`, `src/evaluate.py`, `src/indexer.py`, `main.py`) automatically verify the presence of `data/CUB_200_2011/images` and download/extract the dataset on first execution if missing.
+
+
 ---
 
 ## Pipeline Execution Commands (How to Run)
