@@ -28,7 +28,8 @@ COPY main.py .
 COPY checkpoints/ ./checkpoints/
 COPY indices/ ./indices/
 COPY metrics/ ./metrics/
-COPY data/ ./data/
+RUN mkdir -p data
+
 
 # Copy compiled React frontend from Stage 1 into frontend/dist
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
