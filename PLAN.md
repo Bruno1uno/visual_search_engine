@@ -109,43 +109,53 @@ The goal of the project is to build a production-clean **Full ML pipeline (Train
 
 ---
 
-### Phase 4: Serving Engine & FastAPI REST API (`src/inference.py`, `main.py`)
-- **Stable Engine (`src/inference.py`):**
+### [x] Phase 4: Serving Engine & FastAPI REST API (`src/inference.py`, `main.py`)
+- [x] **Stable Engine (`src/inference.py`):**
   - Loads trained ResNet model, CLIP model, FAISS indices, and `id_to_metadata.json` upon initialization.
-  - Method `search_by_image(image_bytes, engine_type='resnet'|'clip', top_k=8)`:
-    1. Computes embedding of uploaded image.
+  - Method `search_by_image(image, engine_type='resnet'|'clip', top_k=8)`:
+    1. Computes L2-normalized vector for query image.
     2. Calls `faiss_index.search(query_vec, top_k)`.
-    3. Maps retrieved numerical indices via `id_to_metadata.json` to image paths and similarity scores.
+    3. Maps retrieved numerical indices via `id_to_metadata.json` to image metadata and similarity scores.
   - Method `search_by_text(text_query, top_k=8)`:
-    1. Computes text embedding using CLIP text encoder.
+    1. Computes text embedding using OpenCLIP text encoder.
     2. Calls `clip_faiss_index.search(text_vec, top_k)`.
     3. Returns list of most relevant images.
-  - *Important:* Uploaded query image is **NOT SAVED** into FAISS index (FAISS index is a read-only database).
-- **FastAPI REST API (`main.py`):**
+  - *Important:* Uploaded query image is **NOT SAVED** into FAISS index (read-only search).
+- [x] **FastAPI REST API (`main.py`):**
   - Endpoints:
     - `POST /api/search/image` (form-data: file, engine_type, top_k)
     - `POST /api/search/text` (json: text_query, top_k)
-    - `GET /api/metrics` (returns precomputed data from metrics JSON)
-    - Static file serving to display source images of CUB-200 dataset.
+    - `GET /api/metrics` (returns precomputed evaluation JSON metrics)
+    - `GET /api/health` & `GET /health` (health check and index status)
+    - Static file mount `/static/images` to serve source CUB-200 images.
   - `CORSMiddleware` configuration for React frontend communication.
 
 ---
 
 ### Phase 5: Internal Dev Dashboard (Streamlit) & Product Web UI (React)
 
-#### A. Internal ML Dashboard (`dashboard.py` - Streamlit)
-- Internal tool for presenting development results.
-- Displays precomputed data from Phase 3:
-  - Training progress (loss curves).
-  - Recall@K, mAP, NMI table on unseen classes.
-  - Ablation study table (Random vs. Hard Mining).
-  - t-SNE projection images (seen & unseen) and Confusion Matrix.
+#### [x] A. Internal ML Dashboard (`dashboard.py` - Streamlit)
+- [x] Internal presentation tool (`Overview & Benchmark`, `Loss Curves`, `Embedding Space & t-SNE`, `Interactive Search Playground`).
+- [x] Connected to FastAPI backend via HTTP requests for live query testing.
+- [x] Integrated CUB-200 bird species dataset info banner and prompt suggestions.
 
-#### B. User-Facing Product Web UI (`frontend/` - React)
+#### [ ] B. User-Facing Product Web UI (`frontend/` - React)
 - Clean, modern SPA interface.
 - Two main tabs / modes:
   1. **Image Similarity Search:** Drag-and-drop image upload + model toggle (Custom Metric ResNet vs. CLIP Visual) + slider for Top-K. Results displayed in a grid with similarity scores.
   2. **Text-to-Image Search:** Text search input (e.g., *"yellow bird with black wings"*) -> query to CLIP text encoder -> display retrieved images.
+
+---
+
+### Phase 6: Cloud Deployment (3 Microservices on Hugging Face Spaces)
+- [ ] **Space #1: Headless REST API Backend (`visual-search-api`):**
+  - Docker Space running FastAPI, PyTorch, OpenCLIP, FAISS search indices, and dataset images static mount.
+  - Serves public REST API endpoints (`/api/search/image`, `/api/search/text`, `/api/health`, `/api/metrics`).
+- [ ] **Space #2: Product Web UI Frontend (`visual-search-app`):**
+  - Static / Docker Space running compiled React Single Page Application (SPA).
+  - Connects to Space #1 backend REST API for live search queries.
+- [ ] **Space #3: Research ML Dashboard (`visual-search-dashboard`):**
+  - Native Streamlit Space running `dashboard.py` for internal presentation of metrics, t-SNE plots, and literature benchmarks.
 
 ---
 

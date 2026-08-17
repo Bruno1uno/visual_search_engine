@@ -250,10 +250,6 @@ elif page == "Embedding Space & t-SNE":
 # Page 4: Interactive Search Playground
 elif page == "Interactive Search Playground":
     st.title("Interactive Search Playground (Live REST API Queries)")
-    st.info(
-        "**Dataset Information:** This search engine is fine-tuned and indexed on the **CUB-200-2011** dataset "
-        "(Caltech-UCSD Birds - 200 bird species, 11,788 images). For best results, query with bird images or bird-related text descriptions."
-    )
 
     if not api_online:
         st.warning(
@@ -281,6 +277,10 @@ elif page == "Interactive Search Playground":
 
     # Tab 1: Image Similarity Search
     with search_tab1:
+        st.info(
+            "**Dataset Information:** This search engine is fine-tuned and indexed on the **CUB-200-2011** dataset "
+            "(Caltech-UCSD Birds - 200 bird species, 11,788 images). For best results, query with bird images."
+        )
         col_ctrl, col_prev = st.columns([1, 1])
 
         with col_ctrl:

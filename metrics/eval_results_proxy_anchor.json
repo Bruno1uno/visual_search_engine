@@ -1,0 +1,19 @@
+{
+  "loss_name": "proxy_anchor",
+  "checkpoint_path": "checkpoints/best_resnet34_proxy_anchor.pt",
+  "embedding_dim": 256,
+  "seen_test_metrics": {
+    "knn_accuracy_top1": 0.7800829875518672
+  },
+  "unseen_test_metrics": {
+    "recall_at_1": 0.524307906627655,
+    "recall_at_2": 0.6477042436599731,
+    "recall_at_4": 0.7579338550567627,
+    "recall_at_8": 0.8463875651359558,
+    "mAP": 0.261505456539598,
+    "NMI": 0.6037219594937903
+  },
+  "confusion_plot_path": "plots/confusion_seen_proxy_anchor.png",
+  "tsne_seen_plot_path": "plots/tsne_seen_proxy_anchor.png",
+  "tsne_plot_path": "plots/tsne_unseen_proxy_anchor.png"
+}

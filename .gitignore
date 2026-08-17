@@ -7,14 +7,15 @@ venv/
 *.egg-info/
 
 TODO.md
-LEARNING_NOTES.MD
+LEARNING_NOTES.md
 checkpoints/
-
+data/
 indices/
 
 metrics/
 plots/
 papers/
+
 
 frontend/node_modules/
 frontend/build/

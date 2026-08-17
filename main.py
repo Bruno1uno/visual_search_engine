@@ -190,3 +190,10 @@ async def get_metrics():
         data = json.load(f)
 
     return data
+
+
+# Mount compiled React frontend to serve single-page application on root path '/'
+frontend_dist = Path("frontend/dist")
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+
