@@ -139,23 +139,22 @@ The goal of the project is to build a production-clean **Full ML pipeline (Train
 - [x] Connected to FastAPI backend via HTTP requests for live query testing.
 - [x] Integrated CUB-200 bird species dataset info banner and prompt suggestions.
 
-#### [ ] B. User-Facing Product Web UI (`frontend/` - React)
-- Clean, modern SPA interface.
-- Two main tabs / modes:
-  1. **Image Similarity Search:** Drag-and-drop image upload + model toggle (Custom Metric ResNet vs. CLIP Visual) + slider for Top-K. Results displayed in a grid with similarity scores.
-  2. **Text-to-Image Search:** Text search input (e.g., *"yellow bird with black wings"*) -> query to CLIP text encoder -> display retrieved images.
+#### [x] B. User-Facing Product Web UI (`frontend/` - React)
+- [x] Clean, modern SPA interface (Vite + React + Tailwind/Glassmorphism).
+- [x] Two main search modes:
+  1. **Image Similarity Search:** Drag-and-drop query image + engine toggle (Custom Metric ResNet 256D vs. OpenCLIP 512D) + slider for Top-K. Results displayed in a responsive grid with similarity scores.
+  2. **Text-to-Image Search:** Natural language text prompt search (OpenCLIP text encoder) returning nearest visual neighbors.
 
 ---
 
-### Phase 6: Cloud Deployment (3 Microservices on Hugging Face Spaces)
-- [ ] **Space #1: Headless REST API Backend (`visual-search-api`):**
-  - Docker Space running FastAPI, PyTorch, OpenCLIP, FAISS search indices, and dataset images static mount.
-  - Serves public REST API endpoints (`/api/search/image`, `/api/search/text`, `/api/health`, `/api/metrics`).
-- [ ] **Space #2: Product Web UI Frontend (`visual-search-app`):**
-  - Static / Docker Space running compiled React Single Page Application (SPA).
-  - Connects to Space #1 backend REST API for live search queries.
-- [ ] **Space #3: Research ML Dashboard (`visual-search-dashboard`):**
-  - Native Streamlit Space running `dashboard.py` for internal presentation of metrics, t-SNE plots, and literature benchmarks.
+### [x] Phase 6: Cloud Deployment (2 Microservices on Hugging Face Spaces)
+- [x] **Space #1: Unified Full-Stack App Space (`bglez/visual-search-app`):**
+  - Multi-stage Docker Space running FastAPI REST API backend and serving compiled React single-page frontend (`frontend/dist` mounted at `/`).
+  - Contains trained model weights (`checkpoints/`), FAISS search indices (`indices/`), metrics, and automatic CUB-200 dataset image download on startup on port **7860**.
+- [x] **Space #2: Research ML Dashboard Space (`bglez/visual-search-app-streamlit-demo`):**
+  - Docker Space running Streamlit (`src/streamlit_app.py`) for internal presentation of metrics, t-SNE plots, and literature benchmarks.
+  - Queries Space #1 live REST API endpoints for interactive search tests.
+
 
 ---
 
