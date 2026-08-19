@@ -1,0 +1,13 @@
+{
+  "study_name": "cub200_metric_hpo_proxy_anchor",
+  "best_val_recall1": 0.7226148247718811,
+  "best_params": {
+    "lr": 5.6858962114272295e-05,
+    "backbone_name": "resnet34",
+    "embedding_dim": 256,
+    "batch_size": 32,
+    "margin": 0.2669066230968625,
+    "alpha": 32.43261735774883
+  },
+  "n_trials": 33
+}

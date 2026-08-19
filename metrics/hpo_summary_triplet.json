@@ -1,0 +1,12 @@
+{
+  "study_name": "cub200_metric_hpo_triplet",
+  "best_val_recall1": 0.6978798508644104,
+  "best_params": {
+    "lr": 7.087708617105664e-05,
+    "backbone_name": "resnet34",
+    "embedding_dim": 256,
+    "batch_size": 64,
+    "margin": 0.2032474118935696
+  },
+  "n_trials": 31
+}

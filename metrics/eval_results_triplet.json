@@ -1,0 +1,19 @@
+{
+  "loss_name": "triplet",
+  "checkpoint_path": "checkpoints/best_resnet34_triplet.pt",
+  "embedding_dim": 256,
+  "seen_test_metrics": {
+    "knn_accuracy_top1": 0.7302904564315352
+  },
+  "unseen_test_metrics": {
+    "recall_at_1": 0.4426063597202301,
+    "recall_at_2": 0.563808262348175,
+    "recall_at_4": 0.6777515411376953,
+    "recall_at_8": 0.7802160978317261,
+    "mAP": 0.2227403066948175,
+    "NMI": 0.5506796254069313
+  },
+  "confusion_plot_path": "plots/confusion_seen_triplet.png",
+  "tsne_seen_plot_path": "plots/tsne_seen_triplet.png",
+  "tsne_plot_path": "plots/tsne_unseen_triplet.png"
+}
