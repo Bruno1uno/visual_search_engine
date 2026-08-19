@@ -13,15 +13,13 @@ The goal of the project is to build a production-clean **Full ML pipeline (Train
 ```text
                ┌─────────────────────────────────────────────────────────┐
                │              OFFLINE STAGE (Batch Processing)           │
-               └─────────────────────────────────────────────────────────┘
-                                           │
    ┌────────────────────────┐    ┌──────────────────────┐    ┌────────────────────────┐
    │  1. ResNet Training    │    │ 2. Evaluation & Plots│    │ 3. Indexer (FAISS)     │
-   │  (Triplet + Hard Mine) │───>│  (Recall@K, t-SNE)   │    │ (ResNet 128D & CLIP)  │
+   │  (Triplet + Hard Mine) │───>│  (Recall@K, t-SNE)   │    │ (ResNet 256D & CLIP)  │
    └────────────────────────┘    └──────────────────────┘    └───────────┬────────────┘
-                                                                          │
-                                                           Saved indices (.faiss) + metadata (.json)
-                                                                          │
+                                                                           │
+                                                            Saved indices (.faiss) + metadata (.json)
+                                                                           │
                ┌────────────────────────────────────────────────────────┴┐
                │                 ONLINE STAGE (Serving & User UI)        │
                └─────────────────────────────────────────────────────────┘
@@ -58,11 +56,11 @@ The goal of the project is to build a production-clean **Full ML pipeline (Train
 ### Phase 2: Model, Loss Functions & Offline Training (`src/model.py`, `src/loss.py`, `src/train.py`)
 - [x] **Model Backbone (`src/model.py`):**
   - ResNet34 (or ResNet18/50) pretrained on ImageNet (`models.ResNet34_Weights.DEFAULT`).
-  - Replace classification layer `model.fc` with `nn.Identity()` and custom head: `nn.Linear(in_features, 128)`.
-  - **L2 Normalization:** Apply `F.normalize(x, p=2, dim=1)` to the output 128D vector in the forward pass.
+  - Replace classification layer `model.fc` with `nn.Identity()` and custom head: `nn.Linear(in_features, 256)`.
+  - **L2 Normalization:** Apply `F.normalize(x, p=2, dim=1)` to the output 256D vector in the forward pass.
 - [x] **Loss Functions & Mining (`src/loss.py`):**
   - [x] **Baseline:** `pytorch_metric_learning.losses.TripletMarginLoss` + `miners.TripletMarginMiner` (hard/semi-hard pair mining).
-  - [x] **Proxy Variant:** `pytorch_metric_learning.losses.ProxyAnchorLoss(num_classes=100, embedding_size=128, margin=0.1, alpha=32.0)` (proxy-based loss without miner, treating class proxies as anchors).
+  - [x] **Proxy Variant:** `pytorch_metric_learning.losses.ProxyAnchorLoss(num_classes=100, embedding_size=256, margin=0.1, alpha=32.0)` (proxy-based loss without miner, treating class proxies as anchors).
 - [x] **Data Loader Parameterization (`src/dataset.py`):**
   - Add `use_m_per_class_sampler: bool = True` to `get_cub200_dataloaders()`.
   - `True` for Triplet Loss (`MPerClassSampler`), `False` for Proxy Anchor (`shuffle=True` random sampler).
@@ -80,10 +78,10 @@ The goal of the project is to build a production-clean **Full ML pipeline (Train
 ### Phase 3: Offline Evaluation, FAISS Indexer & Metrics (`src/evaluate.py`, `src/indexer.py`)
 
 #### [x] A. Offline FAISS Indexer (`src/indexer.py`)
-- **Dataset Pass:** Extraction of 128D embeddings from all CUB-200 images using the trained ResNet, and 512D embeddings using frozen CLIP (`clip-ViT-B-32`).
+- **Dataset Pass:** Extraction of 256D embeddings from all CUB-200 images using the trained ResNet, and 512D embeddings using frozen CLIP (`clip-ViT-B-32`).
 - **FAISS Indexing:**
   - Creation of two separate FAISS indices:
-    1. `resnet_index.faiss`: `faiss.IndexFlatIP(128)` (Inner Product for L2-normalized vectors = Cosine Similarity).
+    1. `resnet_index.faiss`: `faiss.IndexFlatIP(256)` (Inner Product for L2-normalized vectors = Cosine Similarity).
     2. `clip_index.faiss`: `faiss.IndexFlatIP(512)` (for CLIP embeddings).
   - `index.add(embeddings)` adds vectors under numerical IDs ($0 \dots N-1$).
 - **Save to Disk:**

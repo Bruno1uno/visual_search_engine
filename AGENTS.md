@@ -29,7 +29,7 @@ The goal is to learn to work with embedding spaces, nearest neighbor search (Vec
 
 ## Architecture and Rules
 1. **Two Separate FAISS Indices:**
-   - ResNet custom embedding (128D) and CLIP embedding (512D) have **different geometries and dimensions**.
+   - ResNet custom embedding (256D) and CLIP embedding (512D) have **different geometries and dimensions**.
    - They are never mixed in a single index! `indices/resnet_cub200.faiss` and `indices/clip_cub200.faiss` are created separately.
 2. **Offline vs. Online Separation:**
    - **FAISS indexing and metrics evaluation happen OFFLINE** (scripts `src/indexer.py` and `src/evaluate.py`).
@@ -57,7 +57,7 @@ visual_search_engine/
 ├── plots/                     # Generated plots (t-SNE, loss, confusion matrix)
 ├── src/
 │   ├── dataset.py             # CUB loader, disjoint sampler (MPerClassSampler)
-│   ├── model.py               # ResNet34 backbone + L2-normalized 128D head + optionally ResNet18 ...
+│   ├── model.py               # ResNet34 backbone + L2-normalized 256D head + optionally ResNet18 ...
 │   ├── loss.py                # Triplet loss with online batch-hard mining
 │   ├── train.py               # Training loop, validation Recall@1 tracking
 │   ├── evaluate.py            # Computation of Recall@K, mAP, NMI, t-SNE and Ablation study
