@@ -1,6 +1,6 @@
 # Visual Search Engine - React Frontend
 
-A minimalist, modern React single-page application for visual similarity search (Metric Learning) and multi-modal text-to-image retrieval (OpenCLIP) on the CUB-200-2011 dataset.
+A minimalist React application for visual similarity search and multi-modal text-to-image retrieval (OpenCLIP) on the CUB-200-2011 dataset.
 
 ---
 
@@ -15,22 +15,11 @@ A minimalist, modern React single-page application for visual similarity search 
 
 ---
 
-## Key Features
+## Features
 
-1. **Floating Centered Navigation:** Minimalist pill toggle (`[ Image Search | Text-to-Image ]`) instead of traditional heavy sidebars.
-2. **Image-to-Image Search:**
-   - Drag & drop image upload zone with instant preview.
-   - 6 one-click sample bird presets from CUB-200.
-   - Model switch: `ResNet34 (Proxy-Anchor Metric Learning)` vs `OpenCLIP (Zero-Shot)`.
-   - Top-K selector (4, 8, 12, 16, 24).
-3. **Text-to-Image Search (OpenCLIP):**
-   - Natural language search bar with submit shortcuts.
-   - Interactive prompt suggestions (e.g. *"yellow bird with black wings"*).
-4. **Interactive Results Grid:**
-   - Rank and similarity score badges (cosine percentage).
-   - Formatted species class names.
-   - Shimmer skeleton loading states during inference.
-   - Zoom Lightbox Modal for inspecting high-resolution image and dataset metadata.
+1. **Image-to-Image Search:** Upload a custom query image (or select a sample preset) to retrieve the Top-K most visually similar images from CUB-200. Supports switching between custom ResNet-34 metric learning and OpenCLIP models.
+2. **Text-to-Image Search:** Query the image dataset using natural language prompts (e.g., *"yellow bird with black wings"*) via OpenCLIP multimodal text and image embeddings.
+3. **Interactive Inspection:** Displays cosine similarity scores, formatted class names, and high-resolution image previews in a modal.
 
 ---
 

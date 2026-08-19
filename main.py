@@ -137,6 +137,11 @@ async def search_by_image(
 
     try:
         image_bytes = await file.read()
+        if len(image_bytes) > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded image file exceeds maximum allowed size of 10 MB.",
+            )
         image = Image.open(io.BytesIO(image_bytes))
         results = engine.search_by_image(image=image, engine_type=engine_type, top_k=top_k)
 

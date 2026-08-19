@@ -32,6 +32,15 @@ Full-stack Machine Learning project demonstrating an end-to-end vector search pi
 * **Comprehensive Metrics (`src/evaluate.py`):**
   * Evaluates **Recall@K (K=1, 2, 4, 8)**, **mAP (mean Average Precision)**, **NMI (Normalized Mutual Information)**, 1-NN classification accuracy, Confusion Matrix heatmaps, and t-SNE scatter projections.
 
+### Design Choices & Theoretical Rationale
+
+* **Backbone Architecture (ResNet-34):** Selected for its proven balance between feature extraction depth, parameter efficiency, and fast inference. Pre-trained on ImageNet to leverage transfer learning for fine-grained feature representation.
+* **Loss Functions:**
+  * **Proxy Anchor Loss (CVPR 2020):** Replaces pair-sampling complexity O(N^3) with global class proxy anchors, pulling positive samples and pushing negative samples relative to proxies for significantly faster, smoother convergence.
+  * **Triplet Loss + Semi-Hard Mining:** Included as a classic metric learning baseline with online semi-hard negative pair mining (`pytorch_metric_learning.miners`).
+* **Optimizer (AdamW):** Standard practice in modern deep metric learning. Decouples weight decay regularization from adaptive gradient updates, preventing L2 regularization from distorting adaptive learning rates of feature embedding weights and trainable class proxies.
+* **LR Scheduler (ReduceLROnPlateau):** Adopted following established metric learning benchmark methodologies (e.g., *Proxy Anchor Loss* CVPR 2020 paper setup). Dynamically reduces the learning rate by 0.5x when validation zero-shot Recall@1 plateaus (patience = 2), ensuring fine-grained metric space calibration near local optima.
+
 ---
 
 ## Experimental Results (Proxy Anchor vs. Triplet Loss)
@@ -99,7 +108,9 @@ python -m src.hpo --loss_type proxy_anchor --n_trials 15 --epochs_per_trial 5
 # HPO for Triplet Loss
 python -m src.hpo --loss_type triplet --n_trials 15 --epochs_per_trial 5
 ```
-*Outputs:* Saves best configs to `configs/best_config_proxy_anchor.yaml` and SQLite database `hpo_study.db`.
+*Outputs & Downstream Purpose:*
+- `configs/best_config_*.yaml`: Optimal hyperparameter choices automatically loaded by `src/train.py` via `--config_path`.
+- `hpo_study.db`: SQLite database storing Optuna trial history to allow resuming search studies without starting over and inspecting trials in Optuna Dashboard.
 
 ---
 
@@ -112,7 +123,9 @@ python -m src.train --loss_type proxy_anchor --num_epochs 25 --checkpoint_path c
 # Train Triplet Loss model
 python -m src.train --loss_type triplet --num_epochs 25 --checkpoint_path checkpoints/best_resnet34_triplet.pt
 ```
-*Outputs:* Saves model weights to `checkpoints/*.pt` and training loss history to `metrics/history_*.json`.
+*Outputs & Downstream Purpose:*
+- `checkpoints/*.pt`: Trained PyTorch weights loaded by `src/indexer.py` (to build vector search indices) and `src/evaluate.py` (for offline metrics evaluation).
+- `metrics/history_*.json`: Epoch-by-epoch train/val loss curves visualized in `dashboard.py`.
 
 ---
 
@@ -122,10 +135,9 @@ Extract feature embeddings for all 11,788 CUB-200 images and construct FAISS sea
 # Build FAISS indices using trained Proxy Anchor checkpoint
 python -m src.indexer --checkpoint_path checkpoints/best_resnet34_proxy_anchor.pt --batch_size 64
 ```
-*Outputs:*
-- `indices/resnet_cub200.faiss` (Custom ResNet 256D index)
-- `indices/clip_cub200.faiss` (OpenCLIP 512D index)
-- `indices/id_to_metadata.json` (Numerical ID to image path and label mapping)
+*Outputs & Downstream Purpose:*
+- `indices/resnet_cub200.faiss` & `indices/clip_cub200.faiss`: Pre-computed FAISS vector indices loaded into RAM at startup by `main.py` FastAPI serving layer for nearest neighbor search.
+- `indices/id_to_metadata.json`: Numerical vector ID to image relative path and class label mapping used by `src/inference.py` to resolve search results.
 
 ---
 
@@ -138,11 +150,9 @@ python -m src.evaluate --checkpoint_path checkpoints/best_resnet34_proxy_anchor.
 # Evaluate Triplet Loss model
 python -m src.evaluate --checkpoint_path checkpoints/best_resnet34_triplet.pt --loss_name triplet
 ```
-*Outputs:*
-- `metrics/eval_results_proxy_anchor.json` & `metrics/eval_results_triplet.json`
-- `plots/confusion_seen_proxy_anchor.png` & `plots/confusion_seen_triplet.png`
-- `plots/tsne_seen_proxy_anchor.png` & `plots/tsne_unseen_proxy_anchor.png`
-- `plots/tsne_seen_triplet.png` & `plots/tsne_unseen_triplet.png`
+*Outputs & Downstream Purpose:*
+- `metrics/eval_results_*.json`: Quantitative metrics (Recall@K, mAP, NMI, 1-NN accuracy) displayed in `dashboard.py` and benchmark tables.
+- `plots/*.png`: Confusion matrices and t-SNE 2D embedding cluster projections exported for analysis and presentation in `dashboard.py`.
 
 ---
 
@@ -173,17 +183,15 @@ npm install
 npm run dev
 ```
 - React UI: `http://localhost:3000`
-- Detailed frontend architecture and disclaimer: [frontend/README.md](file:///d:/PRG/ML/visual_search_engine/frontend/README.md)
+- Detailed frontend architecture and disclaimer: [frontend/README.md](./frontend/README.md)
 
 ---
 
 ### 8. Full-Stack Docker Deployment (`Dockerfile`)
 Build and run the entire unified full-stack application (FastAPI backend + React frontend) in a single isolated Docker container:
 ```powershell
-# Build multi-stage Docker image
 docker build -t visual-search-engine .
 
-# Run container on port 7860 (Hugging Face Spaces default)
 docker run -p 7860:7860 visual-search-engine
 ```
 - Web Application & API: `http://localhost:7860`
